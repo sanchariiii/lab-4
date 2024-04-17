@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>lab4</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        #container {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: rgb(255, 173, 187);
+            font-family: 'Times New Roman', Times, serif;
+        }
+       
+        h3 {
+            color: rgb(255, 173, 187);
+            font-family: 'Times New Roman', Times, serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1> slyther.io but blobs so blober.io </h1>
+       
+        <h3 id="score">score:</h3>
+        <canvas id="myCanvas"></canvas>
+    </div>
+    <script>
+        var canvas;
+        var ctx;
+        var bubbles = [];
+        var score = 0;
+        var win = false;
+        
+        //THE MOUSE VARIABLE
+        var mouse = { x: 0, y: 0 };
+        
+        setUpCanvas();
+        
+        function setUpCanvas() {
+            canvas = document.querySelector("#myCanvas");
+            canvas.width = window.innerWidth; 
+            canvas.height = window.innerHeight; 
+            canvas.style.border = "1px solid black";
+            ctx = canvas.getContext("2d");
+            
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+            mouse = { x: 0, y: 0 };
+        
+            canvas.addEventListener("mousemove", function (event) {
+                mouse.x = event.clientX - canvas.offsetLeft;
+                mouse.y = event.clientY - canvas.offsetTop;
+            });
+        
+            createBubbles();
+            
+            animate();
+        }
+        
+        function createBubbles() {
+            for (var i = 0; i < 200; i++) {
+                bubbles.push({
+                    x: randi(canvas.width),
+                    y: randi(canvas.height),
+                    dx: randn(6),
+                    dy: randn(6),
+                    size: randi(30) + 1,
+                    type: "bubble",
+                    caught: false,
+                });
+            }
+        }
+        
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+            //THIS MOVES THE BUBBLES
+            for (var i = 0; i < bubbles.length; i++) {
+                var bubble = bubbles[i];
+                var _dx = mouse.x - bubble.x;
+                var _dy = mouse.y - bubble.y;
+                var distance = Math.sqrt(_dx * _dx + _dy * _dy);
+        
+                // CATCH THE BUBBLES CODE
+                if (distance < 80 + score && win === false) {
+                    bubble.x = lerp(bubble.x, mouse.x, 0.1);
+                    bubble.y = lerp(bubble.y, mouse.y, 0.1);
+                    if (distance < 3 && bubble.caught === false) bubble.caught = true;
+                }
+                // FAR AWAY BUBBLES
+                else {
+                    if (distance > 3 && bubble.caught === true) bubble.caught = false;
+                    bubble.x += bubble.dx;
+                    bubble.y += bubble.dy;
+                    if (bubble.x < 0 || bubble.x > canvas.width) {
+                        bubble.dx = -bubble.dx;
+                    }
+                    if (bubble.y < 0 || bubble.y > canvas.height) {
+                        bubble.dy = -bubble.dy;
+                    }
+                }
+            }
+        
+            //drawing the BUBBLES
+            score = 0;
+            for (let i = 0; i < bubbles.length; i++) {
+                var bubble = bubbles[i];
+                ctx.beginPath();
+                if (bubble.caught === true) {
+                    ctx.arc(bubble.x, bubble.y, 10 + score, 0, 2 * Math.PI);
+                } else {
+                    ctx.arc(bubble.x, bubble.y, bubble.size, 0, 2 * Math.PI);
+                }
+                ctx.closePath();
+                ctx.fillStyle = "#FFB6C1";
+                if (bubble.caught === true) {
+                    ctx.fillStyle = "#6E50F7";
+                    score++;
+                }
+                if (win) ctx.fillStyle = "#FF5025";
+                ctx.fill();
+                if (win === true) bubble.caught = false;
+            }
+        
+            if (!win) {
+                document.getElementById("score").innerText = `score: ${score}/${bubbles.length}`;
+            }
+        
+            if (score === bubbles.length) {
+                win = true;
+                document.getElementById("score").innerText = `YAY`;
+            }
+        
+            requestAnimationFrame(animate);
+        }
+        
+        function randi(range) {
+            var r = Math.floor(Math.random() * range);
+            return r;
+        }
+        
+        function randn(range) {
+            var r = Math.random() * range - range / 2;
+            return r;
+        }
+        
+        function lerp(start, end, t) {
+            return start * (1 - t) + end * t;
+        }
+    </script>
+</body>
+</html>
